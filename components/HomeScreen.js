@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, ScrollView, Button, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import ItemCard from "./ItemCard";
 import { getItems } from "./api";
 import { useFocusEffect } from '@react-navigation/native';
@@ -43,26 +44,33 @@ export default function HomeScreen({ navigation, route }) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff", paddingTop: 18 }}>
-      <Text style={styles.header}>Auction Items</Text>
-      <View style={styles.searchRow}>
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <View style={styles.titleRow}>
+          <Text style={styles.header}>Auction Items</Text>
+          <TouchableOpacity onPress={fetchItems} style={styles.refreshButton}>
+            <Ionicons name="refresh" size={24} color="#6366f1" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.subtitle}>Discover amazing deals and place your bids</Text>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#6b7280" style={styles.searchIcon} />
         <TextInput
           placeholder="Search for items..."
           style={styles.searchInput}
           value={search}
           onChangeText={setSearch}
+          placeholderTextColor="#9ca3af"
         />
-        <TouchableOpacity style={styles.searchBtn} onPress={fetchItems}>
-          <Text style={{ color: "#fff", fontSize: 18 }}>🔍</Text>
-        </TouchableOpacity>
       </View>
-      <Text style={styles.hint}>Find auctions, bids, and more.</Text>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.categoryRow}
-        contentContainerStyle={{ paddingRight: 18, alignItems: 'center' }}
+        contentContainerStyle={{ paddingHorizontal: 12, alignItems: "center" }}
       >
         {categories.map(c => (
           <TouchableOpacity
@@ -70,49 +78,144 @@ export default function HomeScreen({ navigation, route }) {
             style={[styles.categoryBtn, category === c && styles.categoryBtnActive]}
             onPress={() => setCategory(c)}
           >
-            <Text style={{ fontWeight: "bold", color: category === c ? "#fff" : "#222", fontSize: 15 }}>{c}</Text>
+            <Text style={[styles.categoryText, category === c && styles.categoryTextActive]}>
+              {c}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <Text style={styles.hint}>Select a category to filter items.</Text>
 
-      {loading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} size="large" />
-      ) : (
-        <FlatList
-          data={filtered}
-          numColumns={2}
-          keyExtractor={item => item._id || item.id}
-          renderItem={({ item }) => (
-            <ItemCard item={item} onPress={() => navigation.navigate("ItemDetail", { item })} />
-          )}
-          contentContainerStyle={{ paddingBottom: 30 }}
-        />
-      )}
-      
+      <View style={styles.itemsContainer}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#6366f1" />
+            <Text style={styles.loadingText}>Loading auctions...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filtered}
+            numColumns={2}
+            keyExtractor={item => item._id || item.id}
+            renderItem={({ item }) => (
+              <ItemCard item={item} onPress={() => navigation.navigate("ItemDetail", { item })} />
+            )}
+            contentContainerStyle={styles.itemsList}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { fontSize: 22, fontWeight: "bold", marginLeft: 16, marginBottom: 6 },
-  searchRow: { flexDirection: "row", marginHorizontal: 16, marginBottom: 4 },
-  searchInput: { flex: 1, borderWidth: 1, borderColor: "#ddd", borderRadius: 8, padding: 8, backgroundColor: "#fafafa" },
-  searchBtn: { backgroundColor: "#6495ed", borderRadius: 8, padding: 10, marginLeft: 8, justifyContent: "center", alignItems: "center" },
-  hint: { color: "#888", marginLeft: 18, fontSize: 13, marginBottom: 6 },
-  categoryRow: { flexDirection: "row", marginLeft: 10, marginBottom: 4, paddingVertical: 4 },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#f8fafc",
+  },
+  headerContainer: {
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  header: { 
+    fontSize: 24, 
+    fontWeight: "bold", 
+    color: "#1f2937",
+  },
+  refreshButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#f3f4f6",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    lineHeight: 18,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: { 
+    flex: 1,
+    fontSize: 15,
+    color: "#1f2937",
+    paddingVertical: 8,
+  },
+  categoryRow: { 
+    marginBottom: 12,
+    paddingVertical: 4,
+    maxHeight: 40,
+  },
   categoryBtn: {
-    width: 105,
-    height: 40,
-    backgroundColor: "#eee",
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "#ffffff",
     marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+    minWidth: 70,
     alignItems: "center",
     justifyContent: "center",
+    height: 28,
   },
   categoryBtnActive: {
-    width: 105,
-    height: 40,
-    backgroundColor: "#6495ed"
+    backgroundColor: "#6366f1",
+    shadowColor: "#6366f1",
+    shadowOpacity: 0.3,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4b5563",
+  },
+  categoryTextActive: {
+    color: "#ffffff",
+  },
+  itemsContainer: {
+    flex: 1,
+    paddingHorizontal: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+  },
+  itemsList: {
+    paddingBottom: 30,
   },
 });
