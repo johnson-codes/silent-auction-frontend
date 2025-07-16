@@ -13,7 +13,7 @@ export default function ItemDetailScreen({ route, navigation }) {
       return;
     }
     try {
-      await axios.post("http://192.168.1.79:3000/api/bids", {
+      await axios.post("http://localhost:3000/api/bids", {
         itemId: item._id || item.id,
         amount: Number(bid),
         bidderId: currentUser?.id,

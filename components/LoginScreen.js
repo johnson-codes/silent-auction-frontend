@@ -9,7 +9,7 @@ export default function LoginScreen({ navigation }) {
 
   const onLogin = async () => {
     try {
-      const res = await axios.post("http://192.168.1.79:3000/api/auth/login", { email, password });
+      const res = await axios.post("http://localhost:3000/api/auth/login", { email, password });
       setCurrentUser(res.data.user);  // 保存用户
       navigation.replace("MainTabs");
     } catch (e) {

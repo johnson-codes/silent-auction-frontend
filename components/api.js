@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_BASE = "http://192.168.1.79:3000/api";
+const API_BASE = "http://localhost:3000/api";
 
 // export const getItems = () => axios.get(`${API_BASE}/items`);
 export const placeBid = (itemId, bidderId, amount) =>
