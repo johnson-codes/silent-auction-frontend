@@ -2,14 +2,11 @@ import React from "react";
 import { TouchableOpacity, View, Text, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function ItemCard({ item, onPress }) {
+export default function ItemCard({ item, onPress, onBidPress }) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.imageContainer}>
         <Image source={{ uri: item.imageUrl }} style={styles.img} />
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{item.category || "General"}</Text>
-        </View>
       </View>
       
       <View style={styles.content}>
@@ -19,7 +16,7 @@ export default function ItemCard({ item, onPress }) {
           <View style={styles.priceRow}>
             <Ionicons name="pricetag" size={14} color="#6366f1" />
             <Text style={styles.price}>
-              ${item.currentBid ?? item.startingBid ?? "-"}
+              ${item.currentBid || item.price || item.startingBid || "0"}
             </Text>
           </View>
           
@@ -29,7 +26,10 @@ export default function ItemCard({ item, onPress }) {
           </View>
         </View>
         
-        <TouchableOpacity style={styles.bidButton}>
+        <TouchableOpacity 
+          style={styles.bidButton}
+          onPress={() => onBidPress && onBidPress(item)}
+        >
           <Text style={styles.bidButtonText}>Place Bid</Text>
         </TouchableOpacity>
       </View>
@@ -58,21 +58,6 @@ const styles = StyleSheet.create({
     width: "100%", 
     height: 120, 
     backgroundColor: "#f3f4f6",
-  },
-  categoryBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "rgba(99, 102, 241, 0.9)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  categoryText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "600",
-    textTransform: "uppercase",
   },
   content: {
     padding: 10,

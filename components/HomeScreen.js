@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ItemCard from "./ItemCard";
 import { getItems } from "./api";
@@ -14,16 +14,29 @@ export default function HomeScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
 
   const fetchItems = async () => {
-  setLoading(true);
-  try {
-    const res = await getItems();
-    // 排序，保证最新的在最前面
-    setItems(res.data.slice().reverse());
-  } catch (e) {
-    alert("Failed to fetch items");
-  }
-  setLoading(false);
-};
+    setLoading(true);
+    try {
+      const res = await getItems();
+      // Sort items to ensure updated ones are visible
+      const sortedItems = res.data.slice().sort((a, b) => {
+        // Sort by current bid (highest first), then by creation date (newest first)
+        const aBid = a.currentBid || a.price || 0;
+        const bBid = b.currentBid || b.price || 0;
+        if (aBid !== bBid) return bBid - aBid;
+        return new Date(b.createdAt || b._id) - new Date(a.createdAt || a._id);
+      }).map(item => ({
+        ...item,
+        // Ensure every item has a category field - default to "Art" if missing
+        category: item.category || "Art"
+      }));
+      setItems(sortedItems);
+      console.log("Items refreshed successfully");
+    } catch (e) {
+      console.error("Failed to fetch items:", e);
+      alert("Failed to fetch items");
+    }
+    setLoading(false);
+  };
   useEffect(() => {
     fetchItems();
   }, []);
@@ -31,16 +44,51 @@ export default function HomeScreen({ navigation, route }) {
   // 核心：监听 forceRefresh 参数
   useEffect(() => {
     if (route.params?.forceRefresh) {
+      console.log("Force refreshing items...");
       fetchItems();
-      navigation.setParams({ forceRefresh: false }); // 清空参数，防止反复刷新
+      
+      // Show success message if coming from a successful bid
+      if (route.params?.lastBidAmount && route.params?.lastBidItem) {
+        setTimeout(() => {
+          Alert.alert(
+            "Bid Updated Successfully! ✅",
+            `Your bid of $${route.params.lastBidAmount} for "${route.params.lastBidItem}" is now the current highest bid!`,
+            [{ text: "Awesome!", style: "default" }]
+          );
+        }, 800);
+      }
+      
+      // Show success message if coming from a new item upload
+      if (route.params?.newItemAdded) {
+        setTimeout(() => {
+          Alert.alert(
+            "Item Listed Successfully! 🎉",
+            "Your item has been added to the auction and is now visible to all users!",
+            [{ text: "Great!", style: "default" }]
+          );
+        }, 800);
+      }
+      
+      // Clear parameters to prevent repeated refreshes
+      navigation.setParams({ 
+        forceRefresh: false, 
+        lastBidAmount: null, 
+        lastBidItem: null,
+        newItemAdded: false
+      });
     }
-  }, [route.params?.forceRefresh]);
+  }, [route.params?.forceRefresh, route.params?.lastBidAmount, route.params?.lastBidItem, route.params?.newItemAdded]);
 
   const filtered = items.filter(
-    item =>
-      (category === "All" || item.category === category) &&
-      (item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.category.toLowerCase().includes(search.toLowerCase()))
+    item => {
+      // Since we ensure all items have a category field, we can simplify this
+      const categoryMatch = category === "All" || item.category === category;
+      const searchMatch = search === "" || 
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.category.toLowerCase().includes(search.toLowerCase());
+      
+      return categoryMatch && searchMatch;
+    }
   );
 
   return (
@@ -97,7 +145,11 @@ export default function HomeScreen({ navigation, route }) {
             numColumns={2}
             keyExtractor={item => item._id || item.id}
             renderItem={({ item }) => (
-              <ItemCard item={item} onPress={() => navigation.navigate("ItemDetail", { item })} />
+              <ItemCard 
+                item={item} 
+                onPress={() => navigation.navigate("ItemDetail", { item })}
+                onBidPress={(item) => navigation.navigate("ItemDetail", { item, focusBid: true })}
+              />
             )}
             contentContainerStyle={styles.itemsList}
             showsVerticalScrollIndicator={false}
@@ -116,8 +168,8 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: "#ffffff",
     paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 12,
+    paddingTop: 38,
+    paddingBottom: 9,
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },

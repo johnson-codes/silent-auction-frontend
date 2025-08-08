@@ -28,3 +28,9 @@ export const getItems = (sellerId) => {
 
 export const getNotifications = (userId) =>
   axios.get(`${API_BASE}/notifications/user/${userId}`);
+
+export const getUnreadNotificationCount = (userId) =>
+  axios.get(`${API_BASE}/notifications/${userId}/unread-count`);
+
+export const markNotificationAsRead = (notificationId) =>
+  axios.patch(`${API_BASE}/notifications/${notificationId}/read`);

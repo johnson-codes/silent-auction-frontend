@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "silent-auction-app",
-    "slug": "silent-auction-app",
+    "slug": "silent-auction-app-johnson2026",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,22 +20,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.johnson2026.silentauctionappjohnson2026"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "dfcf78d9-f868-41b9-8f5a-e05555cddf9d"
-      }
-    },
-    "owner": "chris_jam",
+    "owner": "johnson2026",
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/dfcf78d9-f868-41b9-8f5a-e05555cddf9d"
+    "extra": {
+      "eas": {
+        "projectId": "48210289-e508-47e9-afcf-2e71b83faa1d"
+      }
     }
   }
 }

@@ -84,7 +84,11 @@ export default function ItemGridScreen({ navigation, route }) {
           numColumns={2}
           keyExtractor={item => item._id || item.id}
           renderItem={({ item }) => (
-            <ItemCard item={item} onPress={() => navigation.navigate("ItemDetail", { item })} />
+            <ItemCard 
+              item={item} 
+              onPress={() => navigation.navigate("ItemDetail", { item })}
+              onBidPress={(item) => navigation.navigate("ItemDetail", { item, focusBid: true })}
+            />
           )}
           contentContainerStyle={{ paddingBottom: 30 }}
         />
