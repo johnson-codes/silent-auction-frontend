@@ -2,38 +2,37 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ItemCard from "./ItemCard";
+import { useAuth } from "../contexts/AuthContext";
 import { getItems } from "./api";
 import { useFocusEffect } from '@react-navigation/native';
 
 const categories = ["All", "Art", "Electronics", "Fashion", "Collectibles"];
 
 export default function HomeScreen({ navigation, route }) {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Set to false since we're not loading from API
 
   const fetchItems = async () => {
     setLoading(true);
     try {
       const res = await getItems();
-      // Sort items to ensure updated ones are visible
-      const sortedItems = res.data.slice().sort((a, b) => {
-        // Sort by current bid (highest first), then by creation date (newest first)
-        const aBid = a.currentBid || a.price || 0;
-        const bBid = b.currentBid || b.price || 0;
-        if (aBid !== bBid) return bBid - aBid;
-        return new Date(b.createdAt || b._id) - new Date(a.createdAt || a._id);
-      }).map(item => ({
+      console.log("API response:", res.data);
+      
+      // Ensure all items have required fields and sort by creation date
+      const sortedItems = res.data.map(item => ({
         ...item,
-        // Ensure every item has a category field - default to "Art" if missing
-        category: item.category || "Art"
-      }));
+        category: item.category || "Art" // Default category if missing
+      })).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      
       setItems(sortedItems);
-      console.log("Items refreshed successfully");
+      console.log("Items loaded successfully:", sortedItems.length);
     } catch (e) {
       console.error("Failed to fetch items:", e);
       alert("Failed to fetch items");
+      setItems([]); // Set empty array on error
     }
     setLoading(false);
   };

@@ -35,16 +35,28 @@ app.use((req, res) => res.status(404).json({ message: "Not Found" }));
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jamnorip:s8LESHNvGj1RtRPm@cluster0.u2mw6ry.mongodb.net/silence_auction_database?retryWrites=true&w=majority&appName=Cluster0";
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+console.log("Attempting to connect to MongoDB...");
+console.log("Using URI:", MONGO_URI.replace(/:[^:@]*@/, ':****@')); // Hide password in logs
+
+mongoose.connect(MONGO_URI);
 
 mongoose.connection.once("open", () => {
-  console.log("MongoDB Connected:", mongoose.connection.name);
-  app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+  console.log("✅ MongoDB Connected successfully!");
+  console.log("Database name:", mongoose.connection.name);
+  app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
 });
 
 mongoose.connection.on("error", (err) => {
-  console.error("MongoDB connection error:", err);
+  console.error("❌ MongoDB connection error:", err);
 });
+
+mongoose.connection.on("disconnected", () => {
+  console.log("MongoDB disconnected");
+});
+
+// Add a timeout to see if connection is hanging
+setTimeout(() => {
+  if (mongoose.connection.readyState === 0) {
+    console.log("⏰ Connection timeout - MongoDB may be unreachable");
+  }
+}, 10000);

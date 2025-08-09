@@ -3,10 +3,12 @@ import { View, Text, TextInput, Alert, TouchableOpacity, Image, StyleSheet, Safe
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAuth } from "../contexts/AuthContext";
 import { uploadItem } from "./api";
-import { currentUser } from "./user";
+// import { currentUser } from "./user";
 
 export default function UploadScreen({ navigation }) {
+  const { user, mongoUser } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Art"); // Default category
@@ -83,8 +85,8 @@ export default function UploadScreen({ navigation }) {
     formData.append("category", selectedCategory);
     formData.append("startingBid", startingBid);
     formData.append("deadline", deadline);
-    if (currentUser?.id) {
-      formData.append("sellerId", currentUser.id);
+    if (mongoUser?._id) {
+      formData.append("sellerId", mongoUser._id);
     }
 
     console.log("Uploading item with category:", selectedCategory);

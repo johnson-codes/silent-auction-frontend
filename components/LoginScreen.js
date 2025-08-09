@@ -1,20 +1,30 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, LinearGradient } from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
-import { setCurrentUser } from "./user";
+import AuthService from "../services/AuthService";
 
 export default function LoginScreen({ navigation }) {
+  console.log("LoginScreen component loaded!");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/login", { email, password });
-      setCurrentUser(res.data.user);  // 保存用户
+      const user = await AuthService.signIn(email, password);
+      console.log("User signed in:", user);
       navigation.replace("MainTabs");
-    } catch (e) {
-      alert("Login failed: " + (e.response?.data?.message || "Unknown error"));
+    } catch (error) {
+      Alert.alert("Login Failed", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,8 +64,14 @@ export default function LoginScreen({ navigation }) {
           />
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={onLogin}>
-          <Text style={styles.loginButtonText}>Sign In</Text>
+        <TouchableOpacity 
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
+          onPress={onLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {loading ? "Signing In..." : "Sign In"}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.divider}>
@@ -167,6 +183,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     color: "#6b7280",
     fontSize: 14,
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   registerButton: {
     backgroundColor: "#ffffff",

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Image } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { currentUser } from "./user";
-import { getNotifications, markNotificationAsRead } from "./api";
+import { useAuth } from "../contexts/AuthContext";
+// import { currentUser } from "./user";
+// import { getNotifications, markNotificationAsRead } from "./api";
 
 export default function MyNotificationsScreen({ navigation }) {
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false); // Set to false since we're not loading from API
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -15,9 +17,15 @@ export default function MyNotificationsScreen({ navigation }) {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const res = await getNotifications(currentUser.id);
-      setNotifications(res.data);
+      // TODO: Implement Firebase integration or update backend to use Firebase auth
+      // const res = await getNotifications(user.uid);
+      // setNotifications(res.data);
+      
+      // For now, show empty state
+      setNotifications([]);
+      console.log("Notifications loaded (empty state - backend not connected)");
     } catch (e) {
+      console.error("Failed to fetch notifications:", e);
       alert("Failed to fetch notifications");
     }
     setLoading(false);
@@ -25,14 +33,15 @@ export default function MyNotificationsScreen({ navigation }) {
 
   const markAsRead = async (notificationId) => {
     try {
-      await markNotificationAsRead(notificationId);
+      // TODO: Implement Firebase notification marking or update backend to use Firebase auth
+      // await markNotificationAsRead(notificationId);
       
-      // Update local state
+      console.log("Mark as read not available - backend not connected");
+      
+      // Update local state anyway for demo purposes
       setNotifications(prev => 
         prev.map(notif => 
-          notif._id === notificationId 
-            ? { ...notif, isRead: true }
-            : notif
+          notif._id === notificationId ? { ...notif, isRead: true } : notif
         )
       );
     } catch (error) {

@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, SafeAreaView, ScrollView, Platform } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { currentUser, setCurrentUser } from "./user";
+import { useAuth } from "../contexts/AuthContext";
 import { getUnreadNotificationCount } from "./api";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function MeScreen({ navigation }) {
-  // Handle local edits
-  const [nickname, setNickname] = useState(currentUser?.nickname || currentUser?.name || "User");
-  const [email, setEmail] = useState(currentUser?.email || "unknown@email.com");
+  const { user, signOut } = useAuth();
+  
+  // Handle local edits - use Firebase user data
+  const [nickname, setNickname] = useState(user?.displayName || "User");
+  const [email, setEmail] = useState(user?.email || "unknown@email.com");
   const [editingField, setEditingField] = useState(null); // 'nickname' | 'email' | null
   const [inputValue, setInputValue] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await getUnreadNotificationCount(currentUser.id);
-      setUnreadCount(response.data.count || 0);
+      // For now, we'll skip this API call since it requires backend integration
+      // const response = await getUnreadNotificationCount(user.uid);
+      // setUnreadCount(response.data.count || 0);
+      setUnreadCount(0); // Temporarily set to 0
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
@@ -45,12 +49,13 @@ export default function MeScreen({ navigation }) {
     setEditingField(null);
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Login" }]
-    });
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // Navigation will be handled automatically by AuthProvider
+    } catch (error) {
+      Alert.alert("Error", "Failed to sign out. Please try again.");
+    }
   };
 
   // Avatar first letter

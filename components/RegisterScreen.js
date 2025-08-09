@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { registerUser } from "./api";
+import AuthService from "../services/AuthService";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -11,18 +11,29 @@ export default function RegisterScreen({ navigation }) {
 
   const onRegister = async () => {
     if (!name || !email || !password) {
-      alert("Please fill out all fields.");
+      Alert.alert("Error", "Please fill out all fields.");
       return;
     }
+
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await registerUser(name, email, password, "bidder"); // 你可以把 "bidder" 换成 "seller" 支持注册卖家
-      alert("Registration successful! Please login with your new account.");
-      navigation.replace("Login");
-    } catch (e) {
-      alert(e.response?.data?.message || "Registration failed");
+      const user = await AuthService.register(email, password, name);
+      console.log("User registered:", user);
+      Alert.alert(
+        "Registration Successful!", 
+        "Your account has been created. Please login with your new account.",
+        [{ text: "OK", onPress: () => navigation.replace("Login") }]
+      );
+    } catch (error) {
+      Alert.alert("Registration Failed", error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

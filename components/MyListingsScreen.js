@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 import { getItems } from "./api";
-import { currentUser } from "./user";
+// import { currentUser } from "./user";
 
 export default function MyListingsScreen() {
-  const [loading, setLoading] = useState(true);
+  const { user, mongoUser } = useAuth();
+  const [loading, setLoading] = useState(false); // Set to false since we're not loading from API
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -14,11 +16,16 @@ export default function MyListingsScreen() {
   const fetchMyListings = async () => {
     setLoading(true);
     try {
-      if (!currentUser?.id) return;
-      // Use sellerId param for backend filtering (recommended for your current api.js)
-      const res = await getItems(currentUser.id);
+      if (!mongoUser?._id) {
+        setItems([]);
+        return;
+      }
+      
+      const res = await getItems(mongoUser._id);
       setItems(res.data);
+      console.log("My listings loaded:", res.data.length);
     } catch (e) {
+      console.error("Failed to fetch listings:", e);
       alert("Failed to fetch your listings");
     }
     setLoading(false);

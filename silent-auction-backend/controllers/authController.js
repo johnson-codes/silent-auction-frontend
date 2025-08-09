@@ -1,5 +1,37 @@
 import User from "../models/User.js";
 
+// Firebase user sync - find or create MongoDB user from Firebase user
+export async function syncFirebaseUser(req, res) {
+  const { firebaseUid, name, email } = req.body;
+  try {
+    // First check if user exists by Firebase UID
+    let user = await User.findOne({ firebaseUid });
+    
+    if (!user) {
+      // Check if user exists by email (for migration)
+      user = await User.findOne({ email });
+      if (user) {
+        // Update existing user with Firebase UID
+        user.firebaseUid = firebaseUid;
+        await user.save();
+      } else {
+        // Create new user
+        user = new User({
+          name,
+          email,
+          firebaseUid,
+          role: 'bidder'
+        });
+        await user.save();
+      }
+    }
+    
+    res.json({ user: { _id: user._id, name: user.name, email: user.email, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
 // 不再需要 bcrypt、jwt，可以删掉这两行
 // import bcrypt from "bcryptjs";
 // import jwt from "jsonwebtoken";

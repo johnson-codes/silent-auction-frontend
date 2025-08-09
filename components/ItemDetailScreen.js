@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TextInput, Alert, Image, TouchableOpacity, SafeAreaView, Platform, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../contexts/AuthContext";
 import { placeBid } from "./api";
-import { currentUser } from "./user";
+// import { currentUser } from "./user";
 
 export default function ItemDetailScreen({ route, navigation }) {
   const { item, focusBid } = route.params;
+  const { user, mongoUser } = useAuth();
   const [bid, setBid] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const bidInputRef = useRef(null);
@@ -24,12 +26,16 @@ export default function ItemDetailScreen({ route, navigation }) {
       Alert.alert("Invalid bid", "Please enter a valid amount higher than the current price.");
       return;
     }
+
+    if (!mongoUser) {
+      Alert.alert("Authentication Error", "Please log in again to place a bid.");
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
-      // Place the bid
-      await placeBid(item._id || item.id, currentUser?.id, Number(bid));
+      await placeBid(item._id || item.id, mongoUser._id, Number(bid));
       
       // Update the local item state to immediately reflect the change
       item.currentBid = Number(bid);
@@ -37,38 +43,18 @@ export default function ItemDetailScreen({ route, navigation }) {
       // Clear the input
       setBid("");
       
-      // Navigate back to homepage immediately and refresh
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'MainTabs',
-            params: {
-              screen: 'Home',
-              params: { 
-                forceRefresh: true,
-                lastBidAmount: bid,
-                lastBidItem: item.title
-              }
-            }
-          }
-        ]
-      });
-      
-      // Show success message after a brief delay
-      setTimeout(() => {
-        Alert.alert(
-          "Bid Successful! 🎉", 
-          `You placed a bid of $${bid} for "${item.title}"`,
-          [{ text: "Great!", style: "default" }]
-        );
-      }, 300);
+      Alert.alert(
+        "Bid Successful! 🎉", 
+        `You placed a bid of $${bid} for "${item.title}"`,
+        [{ text: "Great!", style: "default" }]
+      );
       
     } catch (e) {
+      console.error("Failed to place bid:", e);
       Alert.alert("Bid Failed", e.response?.data?.message || "Something went wrong. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    setIsSubmitting(false);
   };
 
   const formatDate = (dateString) => {

@@ -15,7 +15,7 @@ import MeScreen from "./components/MeScreen";
 import ItemDetailScreen from "./components/ItemDetailScreen";
 import MyListingsScreen from "./components/MyListingsScreen";
 import MyNotificationsScreen from "./components/MyNotificationsScreen";
-import { currentUser } from "./components/user";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { getUnreadNotificationCount } from "./components/api";
 
 const Stack = createStackNavigator();
@@ -132,31 +132,64 @@ function MainTabs() {
   );
 }
 
-export default function App() {
+// Auth-aware navigation component
+function AppNavigator() {
+  const { user, loading } = useAuth();
+
+  // Show loading screen while checking auth state
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
-        <Stack.Screen
-          name="MyListings"
-          component={MyListingsScreen}
-          options={{
-            headerShown: true,
-            title: "My Listings"
-          }}
-        />
-        <Stack.Screen
-          name="MyNotifications"
-          component={MyNotificationsScreen}
-          options={{
-            headerShown: false
-          }}
-        />
+      <Stack.Navigator 
+        initialRouteName={user ? "MainTabs" : "Login"} 
+        screenOptions={{ headerShown: false }}
+      >
+        {user ? (
+          // User is logged in - show main app screens
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
+            <Stack.Screen
+              name="MyListings"
+              component={MyListingsScreen}
+              options={{
+                headerShown: true,
+                title: "My Listings"
+              }}
+            />
+            <Stack.Screen
+              name="MyNotifications"
+              component={MyNotificationsScreen}
+              options={{
+                headerShown: false
+              }}
+            />
+          </>
+        ) : (
+          // User is not logged in - show auth screens
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  console.log("App component loaded successfully!");
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 }
 

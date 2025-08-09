@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator, SafeAreaView, Platform } from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 import { getMyBids } from "./api";
-import { currentUser } from "./user";
 
 export default function BiddingScreen() {
-  const [loading, setLoading] = useState(true);
+  const { user, mongoUser } = useAuth();
+  const [loading, setLoading] = useState(false); // Set to false since we're not loading from API
   const [items, setItems] = useState([]);
 
   useEffect(() => {
     fetchMyBids();
-  }, []);
+  }, [mongoUser]);
 
   const fetchMyBids = async () => {
     setLoading(true);
     try {
-      if (!currentUser?.id) return;
-      const res = await getMyBids(currentUser.id);
+      if (!mongoUser?._id) {
+        setItems([]);
+        return;
+      }
+      
+      const res = await getMyBids(mongoUser._id);
       setItems(res.data);
+      console.log("My bids loaded:", res.data.length);
     } catch (e) {
-      alert("Failed to fetch your bids");
+      console.error("Failed to fetch your bids:", e);
+      setItems([]);
     }
     setLoading(false);
   };
